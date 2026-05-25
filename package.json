@@ -2,6 +2,9 @@
   "name": "tspp",
   "type": "module",
   "private": true,
+  "imports": {
+    "#tspp/types": "./.tspp/types.ts"
+  },
   "scripts": {
     "dev": "bun --watch run .tspp/run.ts",
     "once": "bun run .tspp/run.ts",
