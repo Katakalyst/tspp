@@ -1,0 +1,19 @@
+{
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true
+  },
+  "files": {
+    "includes": [
+      "**/*.ts",
+      "**/*.json",
+      "**/*.md",
+      ".vscode/*.json",
+      "!!**/.tspp/types.d.ts",
+      "!!**/dist"
+    ]
+  }
+}

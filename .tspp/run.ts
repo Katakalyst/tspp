@@ -1,5 +1,5 @@
-import { plugin } from "bun";
 import { pathToFileURL } from "node:url";
+import { plugin } from "bun";
 import { createAutoImportPlugin } from "./plugin.ts";
 import { printError, resolveEntry, resolveProjectRoot } from "./shared.ts";
 
