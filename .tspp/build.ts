@@ -1,10 +1,10 @@
-import { createAutoImportPlugin } from "./plugin.ts";
+import { createAutoImportPlugin } from './plugin.ts';
 import {
   printError,
   resolveEntry,
   resolveOutdir,
   resolveProjectRoot,
-} from "./shared.ts";
+} from './shared.ts';
 
 async function main() {
   try {
@@ -15,13 +15,13 @@ async function main() {
     const result = await Bun.build({
       entrypoints: [entry],
       outdir,
-      target: "bun",
-      format: "esm",
+      target: 'bun',
+      format: 'esm',
       plugins: [createAutoImportPlugin(projectRoot)],
     });
 
     if (!result.success) {
-      throw new AggregateError(result.logs, "Build failed");
+      throw new AggregateError(result.logs, 'Build failed');
     }
 
     console.log(`Built ${entry}`);

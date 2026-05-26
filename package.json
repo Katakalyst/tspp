@@ -11,12 +11,16 @@
     "prod": "bun run .tspp/run.ts",
     "build": "bun run .tspp/build.ts",
     "format": "biome check --write .",
-    "check": "biome check . && tsc --noEmit && bun test"
+    "check": "biome check --config-path .tspp/biome.check.json . && eslint . && tsc --noEmit && bun test"
   },
   "devDependencies": {
-    "@types/bun": "latest",
     "@biomejs/biome": "^2.0.5",
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "latest",
     "bun-plugin-auto-imports": "^0.4.1",
-    "typescript": "^5.9.2"
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.60.0"
   }
 }

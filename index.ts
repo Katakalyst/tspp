@@ -1,1 +1,1 @@
-console.log("Hello from tspp.");
+console.log('Hello from tspp.');

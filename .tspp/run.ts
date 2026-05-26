@@ -1,7 +1,7 @@
-import { pathToFileURL } from "node:url";
-import { plugin } from "bun";
-import { createAutoImportPlugin } from "./plugin.ts";
-import { printError, resolveEntry, resolveProjectRoot } from "./shared.ts";
+import { pathToFileURL } from 'node:url';
+import { plugin } from 'bun';
+import { createAutoImportPlugin } from './plugin.ts';
+import { printError, resolveEntry, resolveProjectRoot } from './shared.ts';
 
 async function main() {
   try {
