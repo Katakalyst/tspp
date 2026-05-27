@@ -1,34 +1,50 @@
+import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
-import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+const forbiddenTypeNames = [
+  "Array",
+  "Boolean",
+  "CallableFunction",
+  "Function",
+  "IArguments",
+  "NewableFunction",
+  "Number",
+  "Object",
+  "RegExp",
+  "String",
+];
+
+export default defineConfig(
   {
     ignores: ["dist/**", ".tspp/**", "node_modules/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.ts"],
+    files: ["index.ts", "src/**/*.ts", "tests/**/*.ts"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      globals: {
-        ...globals.node,
-        ...globals.browser,
-        Bun: "readonly",
-      },
     },
     rules: {
       "no-restricted-globals": [
         "error",
         {
-          name: "Math",
-          message: "The global Math is not available here. Define your own Math if you want one.",
+          name: "undefined",
+          message: "undefined is not part of tspp. Use None instead.",
         },
       ],
       "no-restricted-syntax": [
         "error",
+        ...forbiddenTypeNames.map((name) => ({
+          selector: `TSTypeReference Identifier[name='${name}']`,
+          message: `${name} is compiler scaffolding only and is not part of tspp.`,
+        })),
+        ...forbiddenTypeNames.map((name) => ({
+          selector: `TSExpressionWithTypeArguments Identifier[name='${name}']`,
+          message: `${name} is compiler scaffolding only and is not part of tspp.`,
+        })),
         {
           selector: "ClassDeclaration",
           message: "Classes are not part of tspp.",
@@ -40,6 +56,53 @@ export default tseslint.config(
         {
           selector: "TSEnumDeclaration",
           message: "Enums are not part of tspp.",
+        },
+        {
+          selector: "Literal[value=null]",
+          message: "null is not part of tspp. Use None instead.",
+        },
+        {
+          selector: "NewExpression",
+          message:
+            "new is not part of tspp. Use functions or wrappers instead.",
+        },
+        {
+          selector: "ThisExpression",
+          message: "this is not part of tspp.",
+        },
+        {
+          selector: "ForInStatement",
+          message:
+            "for..in is not part of tspp. Iterate explicit values instead.",
+        },
+        {
+          selector: "ForStatement",
+          message:
+            "C-style for loops are not part of tspp. Use range-based iteration instead.",
+        },
+        {
+          selector: "WhileStatement",
+          message:
+            "while loops are not part of tspp. Use iterator-driven control flow instead.",
+        },
+        {
+          selector: "DoWhileStatement",
+          message:
+            "do..while loops are not part of tspp. Use iterator-driven control flow instead.",
+        },
+        {
+          selector: "UpdateExpression",
+          message:
+            "++ and -- are not part of tspp. Use explicit values instead.",
+        },
+        {
+          selector: "ThrowStatement",
+          message: "throw is not part of tspp. Use Result instead.",
+        },
+        {
+          selector: "TryStatement",
+          message:
+            "try/catch is not part of tspp. Use Result instead.",
         },
       ],
     },

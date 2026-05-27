@@ -11,7 +11,7 @@
     "prod": "bun run .tspp/run.ts",
     "build": "bun run .tspp/build.ts",
     "format": "biome check --write .",
-    "check": "biome check --config-path .tspp/biome.check.json . && eslint . && tsc --noEmit && bun test"
+    "check": "biome check --config-path .tspp/biome.check.json . && eslint . && tsc --noEmit && tsc --noEmit -p .tspp/tsconfig.internal.json && bun test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.5",
@@ -22,5 +22,8 @@
     "globals": "^17.6.0",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.60.0"
+  },
+  "dependencies": {
+    "immutable": "^5.1.5"
   }
 }
