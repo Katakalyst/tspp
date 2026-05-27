@@ -1,4 +1,6 @@
 import { plugin } from 'bun';
-import { createAutoImportPlugin } from './plugin.ts';
+import { createPlugins } from './plugin.ts';
 
-plugin(createAutoImportPlugin(process.cwd()));
+for (const currentPlugin of createPlugins(process.cwd())) {
+  plugin(currentPlugin);
+}

@@ -1,4 +1,4 @@
-import { createAutoImportPlugin } from './plugin.ts';
+import { createPlugins } from './plugin.ts';
 import {
   printError,
   resolveEntry,
@@ -17,7 +17,7 @@ async function main() {
       outdir,
       target: 'bun',
       format: 'esm',
-      plugins: [createAutoImportPlugin(projectRoot)],
+      plugins: createPlugins(projectRoot),
     });
 
     if (!result.success) {
