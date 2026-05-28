@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noLib": true,
+    "types": []
+  },
+  "include": [
+    "../../index.ts",
+    "../../src/**/*.ts",
+    "../../tests/**/*.ts",
+    "../declarations/compiler.user.d.ts",
+    "../declarations/numbers.user.d.ts"
+  ],
+  "exclude": ["../../dist", "../../node_modules"]
+}

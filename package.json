@@ -3,15 +3,15 @@
   "type": "module",
   "private": true,
   "imports": {
-    "#tspp/types": "./.tspp/types.ts"
+    "#tspp/types": "./.tspp/runtime/types.ts"
   },
   "scripts": {
-    "dev": "bun --watch run .tspp/run.ts",
-    "once": "bun run .tspp/run.ts",
-    "prod": "bun run .tspp/run.ts",
-    "build": "bun run .tspp/build.ts",
-    "format": "biome check --write .",
-    "check": "biome check --config-path .tspp/biome.check.json . && eslint . && tsc --noEmit && tsc --noEmit -p .tspp/tsconfig.internal.json && bun test"
+    "dev": "bun --watch run .tspp/cli/run.ts",
+    "once": "bun run .tspp/cli/run.ts",
+    "prod": "bun run .tspp/cli/run.ts",
+    "build": "bun run .tspp/cli/build.ts",
+    "format": "biome check --write --config-path .tspp/config/biome.check.json .",
+    "check": "biome check --config-path .tspp/config/biome.check.json . && eslint . && tsc --noEmit && bun test --pass-with-no-tests"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.5",
@@ -24,6 +24,7 @@
     "typescript-eslint": "^8.60.0"
   },
   "dependencies": {
-    "immutable": "^5.1.5"
+    "immutable": "^5.1.5",
+    "typed-numbers": "^1.0.5"
   }
 }

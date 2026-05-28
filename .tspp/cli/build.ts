@@ -1,10 +1,10 @@
-import { createPlugins } from './plugin.ts';
+import { createPlugins } from '../compiler/plugin';
 import {
   printError,
   resolveEntry,
   resolveOutdir,
   resolveProjectRoot,
-} from './shared.ts';
+} from './shared';
 
 async function main() {
   try {

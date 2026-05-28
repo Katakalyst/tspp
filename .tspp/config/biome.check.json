@@ -6,6 +6,7 @@
       "**/*.json",
       "**/*.md",
       ".vscode/*.json",
+      "!!**/.tspp-cache/**",
       "!!**/.tspp/**",
       "!!**/dist"
     ]

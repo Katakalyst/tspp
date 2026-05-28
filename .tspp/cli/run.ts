@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url';
 import { plugin } from 'bun';
-import { createPlugins } from './plugin.ts';
-import { printError, resolveEntry, resolveProjectRoot } from './shared.ts';
+import { createPlugins } from '../compiler/plugin';
+import { printError, resolveEntry, resolveProjectRoot } from './shared';
 
 async function main() {
   try {

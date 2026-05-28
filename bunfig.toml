@@ -1,2 +1,2 @@
 [test]
-preload = ["./.tspp/test-preload.ts"]
+preload = ["./.tspp/test-support/preload.ts"]

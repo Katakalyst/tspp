@@ -2,17 +2,17 @@
 
 This folder contains the internal implementation for the `tspp` template.
 
-## Config layout
+## Folder layout
 
-The real tool configs live here:
+The internal implementation is split by responsibility:
 
-- `biome.json`
-- `biome.check.json`
-- `compiler.user.d.ts`
-- `eslint.config.mjs`
-- `tsconfig.base.json`
-- `tsconfig.json`
-- `tsconfig.internal.json`
+- `cli/` contains the Bun entrypoints used by root scripts
+- `compiler/` contains the Bun plugin and TypeScript transform
+- `config/` contains Biome, ESLint, and TypeScript configs
+- `declarations/` contains hand-authored userland ambient type scaffolding
+- `runtime/` contains the tspp runtime exported through `#tspp/types`
+- `test-support/` contains Bun test preload wiring
+- `tests/` contains template-internal regression tests
 
 The repo root keeps tiny shim files for tool discovery:
 
@@ -20,25 +20,51 @@ The repo root keeps tiny shim files for tool discovery:
 - `/eslint.config.mjs`
 - `/tsconfig.json`
 
-That keeps the actual config out of the main project surface while still
-making VS Code, TypeScript, Biome, and ESLint work normally.
+That keeps the actual config out of the main project surface while still making
+VS Code, TypeScript, Biome, and ESLint work normally.
 
 TypeScript is split on purpose:
 
-- `tsconfig.json` is the userland tspp view
-- `tsconfig.internal.json` is the `.tspp` implementation view
-- `compiler.user.d.ts` is minimal compiler scaffolding required by `noLib`
+- `config/tsconfig.user.json` is the userland tspp view
+- `config/tsconfig.internal.json` is the `.tspp` implementation view
+- `declarations/compiler.user.d.ts` is minimal compiler scaffolding required by
+  `noLib`
 - userland uses `noLib`, so JavaScript standard library types do not exist
 
-## Check vs format
+## User scripts vs internals
 
-- `bun run format` formats the whole repo, including `.tspp`
-- `bun run check` skips `.tspp` for Biome to keep normal checks faster
+Root `package.json` scripts are for userland projects only. They may call
+`.tspp` implementation files to run, build, or transform a user's code, but
+they should not run template-internal checks or tests.
 
-The idea is:
+Current script boundaries:
 
-- internal template work should still be formattable during development
-- normal users of the template should not pay the `.tspp` cost on every check
+- `bun run format` formats userland files only
+- `bun run check` runs userland formatting checks, ESLint, TypeScript, and
+  userland tests
+- template-internal tests should live under `.tspp` and be run directly by path
+  during template development
+
+Template-internal maintenance commands:
+
+- Format internals with
+  `bunx biome check --write --config-path .tspp/config/biome.json .tspp`
+- Typecheck internals with
+  `bunx tsc --noEmit -p .tspp/config/tsconfig.internal.json`
+- Run an internal test with `bun test ./.tspp/tests/<name>.test.ts`
+- Run the current number transform regression with
+  `bun test ./.tspp/tests/number-ops.test.ts`
+
+Do not add these commands to root `package.json` scripts; those scripts are part
+of the template user's project surface.
+
+Generated files:
+
+- `bun-plugin-auto-imports` writes its generated declarations to
+  `.tspp-cache/auto-imports.d.ts`
+- `.tspp-cache/` is ignored and should not be committed
+- userland built-ins that must be visible to the editor belong in
+  `declarations/`
 
 ## Language rules
 

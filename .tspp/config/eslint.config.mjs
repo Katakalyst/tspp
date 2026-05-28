@@ -14,6 +14,27 @@ const forbiddenTypeNames = [
   "RegExp",
   "String",
 ];
+const unsignedTypeNames = ["u8", "u16", "u32", "u64", "u128"];
+const tsppGlobals = {
+  Err: "readonly",
+  None: "readonly",
+  Ok: "readonly",
+  Some: "readonly",
+  i8: "readonly",
+  i16: "readonly",
+  i32: "readonly",
+  i64: "readonly",
+  i128: "readonly",
+  isErr: "readonly",
+  isNone: "readonly",
+  isOk: "readonly",
+  isSome: "readonly",
+  u8: "readonly",
+  u16: "readonly",
+  u32: "readonly",
+  u64: "readonly",
+  u128: "readonly",
+};
 
 export default defineConfig(
   {
@@ -25,6 +46,7 @@ export default defineConfig(
     files: ["index.ts", "src/**/*.ts", "tests/**/*.ts"],
     languageOptions: {
       ecmaVersion: "latest",
+      globals: tsppGlobals,
       sourceType: "module",
     },
     rules: {
@@ -44,6 +66,14 @@ export default defineConfig(
         ...forbiddenTypeNames.map((name) => ({
           selector: `TSExpressionWithTypeArguments Identifier[name='${name}']`,
           message: `${name} is compiler scaffolding only and is not part of tspp.`,
+        })),
+        ...unsignedTypeNames.map((name) => ({
+          selector: `VariableDeclarator[id.typeAnnotation.typeAnnotation.typeName.name='${name}'][init.type='UnaryExpression'][init.operator='-']`,
+          message: `${name} cannot be initialized with a negative number.`,
+        })),
+        ...unsignedTypeNames.map((name) => ({
+          selector: `CallExpression[callee.name='${name}'] > UnaryExpression.arguments[operator='-']`,
+          message: `${name} cannot be constructed from a negative number.`,
         })),
         {
           selector: "ClassDeclaration",

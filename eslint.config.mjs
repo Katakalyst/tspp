@@ -1,1 +1,1 @@
-export { default } from "./.tspp/eslint.config.mjs";
+export { default } from "./.tspp/config/eslint.config.mjs";
