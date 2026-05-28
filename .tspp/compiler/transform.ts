@@ -1,27 +1,31 @@
-import { resolve } from 'node:path';
+import { sep } from 'node:path';
 import type { BunPlugin } from 'bun';
-
-const TRANSFORM_HELPER = resolve(import.meta.dir, 'transform-helper.cjs');
 
 function escapeRegex(value: string): string {
   return value.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function createUserlandFilter(projectRoot: string): RegExp {
-  const rootPattern = escapeRegex(resolve(projectRoot)).replaceAll(
-    '\\\\',
-    '\\\\',
+  const rootPattern = escapeRegex(projectRoot).replaceAll(
+    escapeRegex(sep),
+    '[\\\\/]',
   );
 
   return new RegExp(
-    `^${rootPattern}\\\\(?!(?:\\.tspp|dist|node_modules)\\\\).+\\.ts$`,
+    `^${rootPattern}[\\\\/](?!(?:\\.tspp|dist|node_modules)[\\\\/]).+\\.ts$`,
     'i',
   );
 }
 
-function runTransform(filePath: string): string {
+function runTransform(filePath: string, projectRoot: string): string {
   const result = Bun.spawnSync({
-    cmd: ['node', TRANSFORM_HELPER, filePath],
+    cmd: [
+      process.execPath,
+      '.tspp/compiler/transform-helper.ts',
+      filePath,
+      projectRoot,
+    ],
+    cwd: projectRoot,
     stderr: 'pipe',
     stdout: 'pipe',
   });
@@ -47,7 +51,7 @@ export function createTsppTransformPlugin(projectRoot: string): BunPlugin {
         { filter: createUserlandFilter(projectRoot) },
         async (args) => {
           return {
-            contents: runTransform(args.path),
+            contents: runTransform(args.path, projectRoot),
             loader: 'ts',
           };
         },
