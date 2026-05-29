@@ -13,7 +13,35 @@ const projectRoot = projectRootArg ?? process.cwd();
 const LIST_HELPER = '__tsppList';
 const IS_SOME_HELPER = '__tsppIsSome';
 const TO_ITERATOR_HELPER = '__tsppToIterator';
+const helperSuffixByOperator = new Map([
+  [ts.SyntaxKind.PlusToken, 'Add'],
+  [ts.SyntaxKind.MinusToken, 'Subtract'],
+  [ts.SyntaxKind.AsteriskToken, 'Multiply'],
+  [ts.SyntaxKind.SlashToken, 'Divide'],
+  [ts.SyntaxKind.PercentToken, 'Remainder'],
+  [ts.SyntaxKind.AmpersandToken, 'BitwiseAnd'],
+  [ts.SyntaxKind.BarToken, 'BitwiseOr'],
+  [ts.SyntaxKind.CaretToken, 'BitwiseXor'],
+  [ts.SyntaxKind.LessThanLessThanToken, 'LeftShift'],
+  [ts.SyntaxKind.GreaterThanGreaterThanToken, 'RightShift'],
+]);
+const unaryHelperSuffixByOperator = new Map([
+  [ts.SyntaxKind.PlusToken, 'Positive'],
+  [ts.SyntaxKind.MinusToken, 'Negate'],
+  [ts.SyntaxKind.TildeToken, 'BitwiseNot'],
+]);
+const comparisonSuffixByOperator = new Map([
+  [ts.SyntaxKind.LessThanToken, 'LessThan'],
+  [ts.SyntaxKind.LessThanEqualsToken, 'LessThanOrEqual'],
+  [ts.SyntaxKind.GreaterThanToken, 'GreaterThan'],
+  [ts.SyntaxKind.GreaterThanEqualsToken, 'GreaterThanOrEqual'],
+  [ts.SyntaxKind.EqualsEqualsToken, 'Equal'],
+  [ts.SyntaxKind.EqualsEqualsEqualsToken, 'Equal'],
+  [ts.SyntaxKind.ExclamationEqualsToken, 'NotEqual'],
+  [ts.SyntaxKind.ExclamationEqualsEqualsToken, 'NotEqual'],
+]);
 const fixedNumberKinds = new Set([
+  'float64',
   'i8',
   'u8',
   'i16',
@@ -22,10 +50,9 @@ const fixedNumberKinds = new Set([
   'u32',
   'i64',
   'u64',
-  'i128',
-  'u128',
 ]);
 type FixedNumberKind =
+  | 'float64'
   | 'i8'
   | 'u8'
   | 'i16'
@@ -33,59 +60,14 @@ type FixedNumberKind =
   | 'i32'
   | 'u32'
   | 'i64'
-  | 'u64'
-  | 'i128'
-  | 'u128';
-const bigFixedNumberKinds = new Set(['i64', 'u64', 'i128', 'u128']);
-const unsignedFixedNumberKinds = new Set(['u8', 'u16', 'u32', 'u64', 'u128']);
-const binaryNumberHelpers = new Map([
-  [ts.SyntaxKind.PlusToken, '__tsppNumberAdd'],
-  [ts.SyntaxKind.MinusToken, '__tsppNumberSubtract'],
-  [ts.SyntaxKind.AsteriskToken, '__tsppNumberMultiply'],
-  [ts.SyntaxKind.AsteriskAsteriskToken, '__tsppNumberExponentiate'],
-  [ts.SyntaxKind.SlashToken, '__tsppNumberDivide'],
-  [ts.SyntaxKind.PercentToken, '__tsppNumberRemainder'],
-  [ts.SyntaxKind.AmpersandToken, '__tsppNumberBitwiseAnd'],
-  [ts.SyntaxKind.BarToken, '__tsppNumberBitwiseOr'],
-  [ts.SyntaxKind.CaretToken, '__tsppNumberBitwiseXor'],
-  [ts.SyntaxKind.LessThanLessThanToken, '__tsppNumberLeftShift'],
-  [ts.SyntaxKind.GreaterThanGreaterThanToken, '__tsppNumberRightShift'],
-  [
-    ts.SyntaxKind.GreaterThanGreaterThanGreaterThanToken,
-    '__tsppNumberUnsignedRightShift',
-  ],
-]);
-const assignmentNumberHelpers = new Map([
-  [ts.SyntaxKind.PlusEqualsToken, '__tsppNumberAdd'],
-  [ts.SyntaxKind.MinusEqualsToken, '__tsppNumberSubtract'],
-  [ts.SyntaxKind.AsteriskEqualsToken, '__tsppNumberMultiply'],
-  [ts.SyntaxKind.AsteriskAsteriskEqualsToken, '__tsppNumberExponentiate'],
-  [ts.SyntaxKind.SlashEqualsToken, '__tsppNumberDivide'],
-  [ts.SyntaxKind.PercentEqualsToken, '__tsppNumberRemainder'],
-  [ts.SyntaxKind.AmpersandEqualsToken, '__tsppNumberBitwiseAnd'],
-  [ts.SyntaxKind.BarEqualsToken, '__tsppNumberBitwiseOr'],
-  [ts.SyntaxKind.CaretEqualsToken, '__tsppNumberBitwiseXor'],
-  [ts.SyntaxKind.LessThanLessThanEqualsToken, '__tsppNumberLeftShift'],
-  [ts.SyntaxKind.GreaterThanGreaterThanEqualsToken, '__tsppNumberRightShift'],
-  [
-    ts.SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken,
-    '__tsppNumberUnsignedRightShift',
-  ],
-]);
-const comparisonOperators = new Set([
-  ts.SyntaxKind.LessThanToken,
-  ts.SyntaxKind.LessThanEqualsToken,
-  ts.SyntaxKind.GreaterThanToken,
-  ts.SyntaxKind.GreaterThanEqualsToken,
-  ts.SyntaxKind.EqualsEqualsToken,
-  ts.SyntaxKind.EqualsEqualsEqualsToken,
-  ts.SyntaxKind.ExclamationEqualsToken,
-  ts.SyntaxKind.ExclamationEqualsEqualsToken,
-]);
-const unaryNumberHelpers = new Map([
-  [ts.SyntaxKind.PlusToken, '__tsppNumberPositive'],
-  [ts.SyntaxKind.MinusToken, '__tsppNumberNegate'],
-  [ts.SyntaxKind.TildeToken, '__tsppNumberBitwiseNot'],
+  | 'u64';
+const integerOnlyHelperSuffixes = new Set([
+  'BitwiseAnd',
+  'BitwiseOr',
+  'BitwiseXor',
+  'BitwiseNot',
+  'LeftShift',
+  'RightShift',
 ]);
 const sourceText = readFileSync(filePath, 'utf8');
 const configPath = join(projectRoot, '.tspp', 'config', 'tsconfig.user.json');
@@ -157,12 +139,11 @@ function isWritableElementAccess(node: ts.ElementAccessExpression): boolean {
   );
 }
 
-function formatLocation(node: ts.Node): string {
-  const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-    node.getStart(sourceFile),
-  );
-
-  return `${filePath}:${line + 1}:${character + 1}`;
+function visitExpression<T extends ts.Expression>(
+  node: T,
+  visitor: ts.Visitor,
+): T {
+  return ts.visitNode(node, visitor) as T;
 }
 
 function getFixedNumberKind(node: ts.Node): FixedNumberKind | undefined {
@@ -170,81 +151,16 @@ function getFixedNumberKind(node: ts.Node): FixedNumberKind | undefined {
   const symbol = type.aliasSymbol ?? type.symbol;
   const name = symbol?.getName();
 
-  if (fixedNumberKinds.has(name)) {
+  if (name && fixedNumberKinds.has(name)) {
     return name as FixedNumberKind;
   }
 
   return undefined;
 }
 
-function getFixedNumberKindFromTypeNode(
-  node: ts.TypeNode | undefined,
-): FixedNumberKind | undefined {
-  if (!node) {
-    return undefined;
-  }
-
-  if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
-    const name = node.typeName.text;
-
-    if (fixedNumberKinds.has(name)) {
-      return name as FixedNumberKind;
-    }
-  }
-
-  return undefined;
-}
-
-function isFixedNumberLiteralInitializer(node: ts.Node): boolean {
-  if (ts.isNumericLiteral(node) || ts.isBigIntLiteral(node)) {
-    return true;
-  }
-
-  return (
-    ts.isPrefixUnaryExpression(node) &&
-    (node.operator === ts.SyntaxKind.PlusToken ||
-      node.operator === ts.SyntaxKind.MinusToken) &&
-    (ts.isNumericLiteral(node.operand) || ts.isBigIntLiteral(node.operand))
-  );
-}
-
-function isNegativeExpression(node: ts.Node): boolean {
-  return (
-    ts.isPrefixUnaryExpression(node) &&
-    node.operator === ts.SyntaxKind.MinusToken
-  );
-}
-
-function isNumberConstructorCall(node: ts.Node): boolean {
-  return (
-    ts.isCallExpression(node) &&
-    ts.isIdentifier(node.expression) &&
-    fixedNumberKinds.has(node.expression.text)
-  );
-}
-
-function isBareNumberLiteral(node: ts.Node): boolean {
-  return (
-    isFixedNumberLiteralInitializer(node) &&
-    !isNumberConstructorCall(node.parent)
-  );
-}
-
-function assertUnsignedInitializerIsNotNegative(
-  kind: FixedNumberKind,
-  value: ts.Node,
-): void {
-  if (unsignedFixedNumberKinds.has(kind) && isNegativeExpression(value)) {
-    throw new Error(
-      `Unsigned fixed-width numbers cannot be initialized with negative values at ${formatLocation(value)}.`,
-    );
-  }
-}
-
 function assertSameFixedNumberKinds(
   left: ts.Node,
   right: ts.Node,
-  node: ts.Node,
 ): FixedNumberKind | undefined {
   const leftKind = getFixedNumberKind(left);
   const rightKind = getFixedNumberKind(right);
@@ -258,182 +174,76 @@ function assertSameFixedNumberKinds(
   }
 
   throw new Error(
-    `Fixed-width number operations require matching operands at ${formatLocation(node)}.`,
+    `Fixed-width number operations require matching operands in ${filePath}.`,
   );
 }
 
-function createNumberConstructorCall(
-  kind: FixedNumberKind,
-  value: ts.Expression,
-): ts.CallExpression {
-  return ts.factory.createCallExpression(
-    ts.factory.createIdentifier(kind),
-    undefined,
-    [value],
-  );
+function kindToHelperPrefix(kind: FixedNumberKind): string {
+  return kind === 'float64'
+    ? 'Float64'
+    : kind.charAt(0).toUpperCase() + kind.slice(1);
 }
 
-function createBigFixedNumberInitializer(
+function createNumberHelperCall(
   kind: FixedNumberKind,
-  value: ts.Expression,
-): ts.Expression {
-  if (!bigFixedNumberKinds.has(kind) || ts.isBigIntLiteral(value)) {
-    return value;
-  }
-
-  if (ts.isNumericLiteral(value)) {
-    return ts.factory.createBigIntLiteral(`${value.text}n`);
-  }
-
-  if (ts.isPrefixUnaryExpression(value) && ts.isNumericLiteral(value.operand)) {
-    const bigint = ts.factory.createBigIntLiteral(`${value.operand.text}n`);
-
-    if (value.operator === ts.SyntaxKind.PlusToken) {
-      return bigint;
-    }
-
-    if (value.operator === ts.SyntaxKind.MinusToken) {
-      return ts.factory.createPrefixUnaryExpression(
-        ts.SyntaxKind.MinusToken,
-        bigint,
-      );
-    }
-  }
-
-  return value;
-}
-
-function createFixedNumberCall(
-  helperName: string,
-  kind: FixedNumberKind,
+  suffix: string,
   args: ts.Expression[],
 ): ts.CallExpression {
+  if (kind === 'float64' && integerOnlyHelperSuffixes.has(suffix)) {
+    throw new Error(`float64 does not support ${suffix} in ${filePath}.`);
+  }
+
+  const helperName = `__tspp${kindToHelperPrefix(kind)}${suffix}`;
   usedNumberHelpers.add(helperName);
 
   return ts.factory.createCallExpression(
     ts.factory.createIdentifier(helperName),
     undefined,
-    [ts.factory.createStringLiteral(kind), ...args],
+    args,
   );
-}
-
-function visitExpression<T extends ts.Expression>(
-  node: T,
-  visitor: ts.Visitor,
-): T {
-  return ts.visitNode(node, visitor) as T;
 }
 
 const result = ts.transform(sourceFile, [
   (context) => {
     const visit: ts.Visitor = (node): ts.VisitResult<ts.Node> => {
-      if (ts.isVariableDeclaration(node)) {
-        const kind = getFixedNumberKindFromTypeNode(node.type);
-
-        if (
-          kind &&
-          node.initializer &&
-          isFixedNumberLiteralInitializer(node.initializer)
-        ) {
-          assertUnsignedInitializerIsNotNegative(kind, node.initializer);
-
-          const initializer = createBigFixedNumberInitializer(
-            kind,
-            visitExpression(node.initializer, visit),
-          );
-
-          return ts.factory.updateVariableDeclaration(
-            node,
-            node.name,
-            node.exclamationToken,
-            node.type,
-            createNumberConstructorCall(kind, initializer),
-          );
-        }
-
-        if (
-          !kind &&
-          node.initializer &&
-          isBareNumberLiteral(node.initializer)
-        ) {
-          throw new Error(
-            `Numeric variable initializers require a fixed-width annotation or constructor at ${formatLocation(node.initializer)}.`,
-          );
-        }
-      }
-
-      if (
-        ts.isCallExpression(node) &&
-        ts.isIdentifier(node.expression) &&
-        unsignedFixedNumberKinds.has(node.expression.text) &&
-        node.arguments.length > 0
-      ) {
-        const argument = node.arguments[0];
-
-        if (!argument) {
-          return ts.visitEachChild(node, visit, context);
-        }
-
-        assertUnsignedInitializerIsNotNegative(
-          node.expression.text as FixedNumberKind,
-          argument,
-        );
-      }
-
       if (ts.isPrefixUnaryExpression(node)) {
-        const helperName = unaryNumberHelpers.get(node.operator);
         const kind = getFixedNumberKind(node.operand);
+        const suffix = unaryHelperSuffixByOperator.get(node.operator);
 
-        if (helperName && kind) {
-          return createFixedNumberCall(helperName, kind, [
+        if (kind && suffix) {
+          return createNumberHelperCall(kind, suffix, [
             visitExpression(node.operand, visit),
           ]);
         }
       }
 
       if (ts.isBinaryExpression(node)) {
-        const helperName = binaryNumberHelpers.get(node.operatorToken.kind);
+        const suffix = helperSuffixByOperator.get(node.operatorToken.kind);
 
-        if (helperName) {
-          const kind = assertSameFixedNumberKinds(node.left, node.right, node);
+        if (suffix) {
+          const kind = assertSameFixedNumberKinds(node.left, node.right);
 
           if (kind) {
-            return createFixedNumberCall(helperName, kind, [
+            return createNumberHelperCall(kind, suffix, [
               visitExpression(node.left, visit),
               visitExpression(node.right, visit),
             ]);
           }
         }
 
-        const assignmentHelperName = assignmentNumberHelpers.get(
+        const comparisonSuffix = comparisonSuffixByOperator.get(
           node.operatorToken.kind,
         );
 
-        if (assignmentHelperName) {
-          const kind = assertSameFixedNumberKinds(node.left, node.right, node);
+        if (comparisonSuffix) {
+          const kind = assertSameFixedNumberKinds(node.left, node.right);
 
           if (kind) {
-            return ts.factory.createAssignment(
+            return createNumberHelperCall(kind, comparisonSuffix, [
               visitExpression(node.left, visit),
-              createFixedNumberCall(assignmentHelperName, kind, [
-                visitExpression(node.left, visit),
-                visitExpression(node.right, visit),
-              ]),
-            );
+              visitExpression(node.right, visit),
+            ]);
           }
-        }
-
-        if (
-          node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-          isBareNumberLiteral(node.right)
-        ) {
-          throw new Error(
-            `Numeric assignments require a fixed-width constructor at ${formatLocation(node.right)}.`,
-          );
-        }
-
-        if (comparisonOperators.has(node.operatorToken.kind)) {
-          assertSameFixedNumberKinds(node.left, node.right, node);
         }
       }
 
