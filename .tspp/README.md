@@ -52,9 +52,6 @@ Template-internal maintenance commands:
 - Typecheck internals with
   `bunx tsc --noEmit -p .tspp/config/tsconfig.internal.json`
 - Run an internal test with `bun test ./.tspp/tests/<name>.test.ts`
-- Run the current number transform regression with
-  `bun test ./.tspp/tests/number-ops.test.ts`
-
 Do not add these commands to root `package.json` scripts; those scripts are part
 of the template user's project surface.
 
